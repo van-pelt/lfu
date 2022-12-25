@@ -7,10 +7,10 @@ import (
 
 func main() {
 	cache := lfu.NewLFU(4)
-	cache.Add("Key_1", 1)
-	cache.Add("Key_2", 2)
-	cache.Add("Key_3", 3)
-	cache.Add("Key_4", 4)
+	cache.Set("Key_1", 1)
+	cache.Set("Key_2", 2)
+	cache.Set("Key_3", 3)
+	cache.Set("Key_4", 4)
 
 	data, err := cache.Get("Key_2")
 	if err != nil {
@@ -19,7 +19,7 @@ func main() {
 	}
 	fmt.Println("Key_2=", data)
 
-	cache.Add("Key_2", "NewValue")
+	cache.Set("Key_2", "NewValue")
 
 	data, err = cache.Get("Key_2")
 	if err != nil {
@@ -27,7 +27,7 @@ func main() {
 		return
 	}
 	fmt.Println("Key_2=", data)
-	cache.Add("Key_5", 5)
+	cache.Set("Key_5", 5)
 
 	data, err = cache.Get("Key_5")
 	if err != nil {
@@ -35,4 +35,5 @@ func main() {
 		return
 	}
 	fmt.Println("Key_5=", data)
+
 }
