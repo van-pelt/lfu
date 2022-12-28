@@ -112,7 +112,7 @@ func TestLFU_GetNotFoundError(t *testing.T) {
 	nonExistingKey := "bad_key"
 	_, err := lfu.Get(nonExistingKey)
 	if err != nil {
-		if !errors.Is(err, errNotFound) {
+		if !errors.Is(err, ErrNotFound) {
 			t.Logf("Fail.Got unknown error %v", err)
 			t.Fail()
 		}

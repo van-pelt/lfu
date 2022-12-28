@@ -1,3 +1,4 @@
+// Package lfu implements a simple LRU caching algorithm implemented on two linked lists in the form of a ring structure
 package lfu
 
 import (
@@ -12,13 +13,15 @@ type node struct {
 	flagNode state
 }
 
+// LFU implements the basic cache structure
 type LFU struct {
 	bucket    map[string]*node
 	firstNode *node
 	size      int
 }
 
-var errNotFound = errors.New("record not found")
+// ErrNotFound an error indicating that the item was not found
+var ErrNotFound = errors.New("record not found")
 
 type state uint8
 
@@ -27,6 +30,7 @@ const (
 	elementData
 )
 
+// NewLFU creates a new cache object with the specified size
 func NewLFU(maxSize int) LFU {
 
 	return LFU{
@@ -42,10 +46,12 @@ func NewLFU(maxSize int) LFU {
 	}
 }
 
+// Len returns the number of items in the cache
 func (l *LFU) Len() int {
 	return len(l.bucket)
 }
 
+// Set Adds the key data to the cache and moves the item to the top of the list.If an element with such a key exists, it will be updated and also moved to the top of the list
 func (l *LFU) Set(key string, value interface{}) {
 	node := &node{
 		next:     nil,
@@ -89,17 +95,23 @@ func (l *LFU) addElement(elem *node) {
 }
 
 func (l *LFU) updateElement(elem *node, value interface{}) {
-	elem.prev.next = elem.next
-	elem.next.prev = elem.prev
-	l.addElement(elem)
+	l.moveToFirst(elem)
 	elem.value = value
 }
 
+func (l *LFU) moveToFirst(elem *node) {
+	elem.prev.next = elem.next
+	elem.next.prev = elem.prev
+	l.addElement(elem)
+}
+
+// Get Returns data from the cache by key.When requesting data, the item is also moved to the top of the list.If the element was not found, an ErrNotFound error is returned
 func (l *LFU) Get(key string) (interface{}, error) {
 	data, ok := l.bucket[key]
 	if !ok {
-		return nil, errNotFound
+		return nil, ErrNotFound
 	}
+	l.moveToFirst(data)
 	return data.value, nil
 }
 
@@ -110,12 +122,28 @@ func (l *LFU) first() *node {
 	return l.firstNode.next
 }
 
+// Clear Clears the cache
+func (l *LFU) Clear() {
+	l.bucket = make(map[string]*node, l.size)
+	l.firstNode = &node{
+		next:     nil,
+		prev:     nil,
+		key:      nil,
+		value:    nil,
+		flagNode: elementRoot,
+	}
+}
+
 /*func (l *LFU) Dump() {
-	fmt.Println("=====backet======")
+	if len(l.bucket) == 0 {
+		fmt.Printf("oops... the cache is still empty =)\n")
+		return
+	}
+	fmt.Println("====================backet====================")
 	for k, v := range l.bucket {
 		fmt.Println("key=", k, "value=", v)
 	}
-	fmt.Println("=====RING========")
+	fmt.Println("=====================RING=====================")
 
 	for elem := l.first(); ; elem = elem.next {
 		switch {
